@@ -26,9 +26,13 @@ namespace OutputLogManagerNEW.Forms
             var ini = new IniFile(iniPath);
             for (int i = 1; i <= 5; i++)
             {
-                Controls[$"txtLocation{i}Name"].Text = ini.Read($"Location{i}", "LocationName");
-                Controls[$"txtLocation{i}Path"].Text = ini.Read($"Location{i}", "LocationPath");
+                var nameBox = FindControlRecursive(this, $"txtLocation{i}Name") as TextBox;
+                var pathBox = FindControlRecursive(this, $"txtLocation{i}Path") as TextBox;
+
+                if (nameBox != null) nameBox.Text = ini.Read($"Location{i}", "LocationName");
+                if (pathBox != null) pathBox.Text = ini.Read($"Location{i}", "LocationPath");
             }
+
         }
 
         private void SaveSettings()
@@ -36,9 +40,16 @@ namespace OutputLogManagerNEW.Forms
             var ini = new IniFile(iniPath);
             for (int i = 1; i <= 5; i++)
             {
-                ini.Write($"Location{i}", "LocationName", Controls[$"txtLocation{i}Name"].Text);
-                ini.Write($"Location{i}", "LocationPath", Controls[$"txtLocation{i}Path"].Text);
+                var nameBox = FindControlRecursive(this, $"txtLocation{i}Name") as TextBox;
+                var pathBox = FindControlRecursive(this, $"txtLocation{i}Path") as TextBox;
+
+                if (nameBox != null)
+                    ini.Write($"Location{i}", "LocationName", nameBox.Text);
+
+                if (pathBox != null)
+                    ini.Write($"Location{i}", "LocationPath", pathBox.Text);
             }
+
         }
 
         private void BtnBrowse_Click(object sender, EventArgs e)
@@ -64,5 +75,20 @@ namespace OutputLogManagerNEW.Forms
         {
             this.Close();
         }
+        private Control? FindControlRecursive(Control parent, string name)
+        {
+            foreach (Control ctrl in parent.Controls)
+            {
+                if (ctrl.Name == name)
+                    return ctrl;
+
+                var child = FindControlRecursive(ctrl, name);
+                if (child != null)
+                    return child;
+            }
+            return null;
+        }
+
+
     }
 }
