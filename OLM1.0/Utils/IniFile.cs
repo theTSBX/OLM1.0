@@ -23,5 +23,15 @@ namespace OutputLogManagerNEW.Utils
             GetPrivateProfileString(section, key, "", retVal, 1024, path);
             return retVal.ToString();
         }
+
+        [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern bool WritePrivateProfileString(string section, string key, string value, string filePath);
+
+        public void Write(string section, string key, string value)
+        {
+            WritePrivateProfileString(section, key, value, path);
+        }
+
+
     }
 }

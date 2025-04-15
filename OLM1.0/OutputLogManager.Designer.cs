@@ -76,9 +76,9 @@ namespace OutputLogManagerNEW
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.SettingsToolStripMenuItem_Click);
 
-            
+
             // listViewOutputLogs
-            
+
             this.listViewOutputLogs.Location = new System.Drawing.Point(12, 60);
             this.listViewOutputLogs.Name = "listViewOutputLogs";
             this.listViewOutputLogs.Size = new System.Drawing.Size(440, 370);

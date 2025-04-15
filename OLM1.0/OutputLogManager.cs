@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using OutputLogManagerNEW.Forms;
 using OutputLogManagerNEW.Components;
 using OutputLogManagerNEW.Interfaces;
 
@@ -129,8 +130,44 @@ namespace OutputLogManagerNEW
 
         private void SettingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Settings dialog not implemented yet.");
+            using (var settingsForm = new SettingsLocations())
+            {
+                if (settingsForm.ShowDialog() == DialogResult.OK)
+                {
+                    LoadLocations(); // <-- reload combo box if needed
+                }
+            }
         }
+
+        private void LoadLocations()
+        {
+            comboBoxLocations.Items.Clear();
+
+            string iniPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "OutputLogManager",
+                "locationsConfig.ini");
+
+            if (!File.Exists(iniPath)) return;
+
+            var ini = new Utils.IniFile(iniPath);
+            for (int i = 1; i <= 5; i++)
+            {
+                string name = ini.Read($"Location{i}", "LocationName");
+                string path = ini.Read($"Location{i}", "LocationPath");
+
+                if (!string.IsNullOrWhiteSpace(name) && Directory.Exists(path))
+                {
+                    comboBoxLocations.Items.Add(path);
+                }
+            }
+
+            if (comboBoxLocations.Items.Count > 0)
+                comboBoxLocations.SelectedIndex = 0;
+        }
+
+
+
 
         private void ComboBoxLocations_SelectedIndexChanged(object sender, EventArgs e)
         {
