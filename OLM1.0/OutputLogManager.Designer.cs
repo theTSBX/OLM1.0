@@ -15,19 +15,14 @@ namespace OutputLogManagerNEW
         private CheckBox checkBoxTailingToggle;
         private ComboBox comboBoxLocations;
         private RichTextBox richTextBoxRawOutput;
-        private TabControl tabControlRightPane; // New TabControl for the third pane
+        private TabControl tabControlRightPane;
 
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
-            {
                 components.Dispose();
-            }
             base.Dispose(disposing);
         }
-
-
-        /// Initializes the form controls.
 
         private void InitializeComponent()
         {
@@ -50,13 +45,13 @@ namespace OutputLogManagerNEW
             menuStrip1.TabIndex = 0;
             menuStrip1.Text = "menuStrip1";
 
-            // File menu
+            // File Menu
             fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { settingsToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new Size(37, 20);
             fileToolStripMenuItem.Text = "File";
 
-            // Settings menu item
+            // Settings Menu Item
             settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             settingsToolStripMenuItem.Size = new Size(116, 22);
             settingsToolStripMenuItem.Text = "Settings";
@@ -95,9 +90,9 @@ namespace OutputLogManagerNEW
             listViewOutputLogs.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
 
             // RichTextBox Raw Output
-            richTextBoxRawOutput.Location = new Point(460, 60); 
+            richTextBoxRawOutput.Location = new Point(460, 60);
             richTextBoxRawOutput.Name = "richTextBoxRawOutput";
-            richTextBoxRawOutput.Size = new Size(600, 700); 
+            richTextBoxRawOutput.Size = new Size(600, 700);
             richTextBoxRawOutput.ReadOnly = true;
             richTextBoxRawOutput.Font = new Font("Consolas", 9F);
             richTextBoxRawOutput.BackColor = Color.Black;
@@ -107,21 +102,24 @@ namespace OutputLogManagerNEW
             // TabControl Right Pane
             tabControlRightPane.Name = "tabControlRightPane";
             tabControlRightPane.Location = new Point(1065, 60);
-            tabControlRightPane.Size = new Size(340, 700); 
+            tabControlRightPane.Size = new Size(340, 700);
             tabControlRightPane.TabIndex = 4;
-            tabControlRightPane.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right; tabControlRightPane.SelectedIndexChanged += TabControlRightPane_SelectedIndexChanged;
+            tabControlRightPane.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+            tabControlRightPane.SelectedIndexChanged += TabControlRightPane_SelectedIndexChanged;
 
-            var tab1 = new TabPage("Summary");
-            tab1.Name = "Summary";
-            var tab2 = new TabPage("Tab 2");
-            var tab3 = new TabPage("Tab 3");
-            var tab4 = new TabPage("Tab 4");
-            tabControlRightPane.TabPages.Add(tab1);
-            tabControlRightPane.TabPages.Add(tab2);
-            tabControlRightPane.TabPages.Add(tab3);
-            tabControlRightPane.TabPages.Add(tab4);
+            // Add Tabs
+            var summaryTab = new TabPage("Summary") { Name = "Summary" };
+            var exceptionsTab = new TabPage("Exceptions") { Name = "Exceptions" };
+            var errorsTab = new TabPage("Errors") { Name = "Errors" };
+            var warningsTab = new TabPage("Warnings");
 
-            // Form
+            tabControlRightPane.TabPages.Add(summaryTab);
+            tabControlRightPane.TabPages.Add(exceptionsTab);
+            tabControlRightPane.TabPages.Add(errorsTab);
+            tabControlRightPane.TabPages.Add(warningsTab);
+            
+
+            // Form Settings
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1440, 801);
@@ -141,6 +139,5 @@ namespace OutputLogManagerNEW
             ResumeLayout(false);
             PerformLayout();
         }
-
     }
 }
