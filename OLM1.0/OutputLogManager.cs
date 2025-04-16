@@ -20,7 +20,7 @@ namespace OutputLogManagerNEW
         private string currentFilePath = string.Empty;
         private ListViewColumnSorter listViewSorter;
         private ContextMenuStrip contextMenu;
-
+        private int exceptionDisplayIndex = 0;
         public OutputLogManager()
         {
             InitializeComponent();
@@ -41,6 +41,8 @@ namespace OutputLogManagerNEW
             listViewOutputLogs.ContextMenuStrip = contextMenu;
             listViewOutputLogs.MouseClick += ListViewOutputLogs_MouseClick;
         }
+
+
 
         private void ListViewOutputLogs_ColumnClick(object sender, ColumnClickEventArgs e)
         {
@@ -172,12 +174,9 @@ namespace OutputLogManagerNEW
 
         private void TabControlRightPane_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var selectedTab = tabControlRightPane.SelectedTab;
-            if (selectedTab.Text == "Summary")
-                LoadSummaryTab();
-            else
-                selectedTab.Controls.Clear();
+            LoadSummaryTab();
         }
+
 
         private void LoadSummaryTab()
         {
@@ -205,59 +204,157 @@ namespace OutputLogManagerNEW
             var mods = (List<string>)summary["mods"];
             var joins = (List<string>)summary["player_joins"];
             var leaves = (List<string>)summary["player_leaves"];
+            var allExceptions = summary["all_exceptions"] as List<string>;
 
             box.AppendText("Summary of Output Log:\n");
             box.AppendText("----------------------------\n");
-            box.AppendText($"🧭 Log Duration: {logTime.Days}d {logTime.Hours}h {logTime.Minutes}m {logTime.Seconds}s\n\n");
+            box.AppendText("🕱 Issues");
 
+            box.AppendText($"\n-Exceptions: {allExceptions?.Count ?? 0}\n");
+            box.AppendText($"-Errors: {summary["error_count"]}\n");
+            box.AppendText($"-Warnings: {summary["warning_count"]}\n");
+            box.AppendText("----------------------------\n");
+            box.AppendText($"⏲ Log Duration: {logTime.Days}d {logTime.Hours}h {logTime.Minutes}m {logTime.Seconds}s\n");
+            box.AppendText($"🌐 UTC Offset: {summary["utc_offset"]}\n");
+            box.AppendText("----------------------------\n");
             box.AppendText("🖥️ System Info:\n");
             box.AppendText($"- Version: {summary["version"]}\n");
             box.AppendText($"- OS: {summary["os"]}\n");
             box.AppendText($"- CPU: {summary["cpu"]}\n");
             box.AppendText($"- RAM: {summary["ram"]}\n");
-
-            string gpuBlock = summary["gpu"]?.ToString() ?? "";
-            string gpuRenderer = "Unknown";
-            string gpuVRAM = "Unknown";
-            string gpuDriver = "Unknown";
-
-            if (!string.IsNullOrWhiteSpace(gpuBlock))
-            {
-                foreach (string line in gpuBlock.Split('\n'))
-                {
-                    string trimmed = line.Trim();
-                    if (trimmed.StartsWith("Renderer:"))
-                        gpuRenderer = trimmed.Substring("Renderer:".Length).Trim();
-                    else if (trimmed.StartsWith("VRAM:"))
-                        gpuVRAM = trimmed.Substring("VRAM:".Length).Trim();
-                    else if (trimmed.StartsWith("Driver:"))
-                        gpuDriver = trimmed.Substring("Driver:".Length).Trim();
-                }
-            }
-
+           
+            string gpuRenderer = summary.ContainsKey("gpu") ? summary["gpu"].ToString() : "Unknown";
+            string gpuVRAM = summary.ContainsKey("vram") ? summary["vram"].ToString() : "Unknown";
+            string gpuDriver = summary.ContainsKey("driver") ? summary["driver"].ToString() : "Unknown";
             box.AppendText($"- GPU: {gpuRenderer}\n");
             box.AppendText($"  VRAM: {gpuVRAM}\n");
-            box.AppendText($"  Driver: {gpuDriver}\n\n");
-
-
+            box.AppendText($"  Driver: {gpuDriver}\n");
+            box.AppendText("----------------------------\n");
             box.AppendText($"🧩 Mods Loaded ({mods.Count}):\n");
             foreach (var mod in mods)
                 box.AppendText($"- {mod}\n");
 
-            box.AppendText($"\n⚠️ Warnings: {summary["warning_count"]}\n");
-            box.AppendText($"🛑 Errors: {summary["error_count"]}\n\n");
-
-            box.AppendText($"👥 Player Joins ({joins.Count}):\n");
+            box.AppendText("----------------------------\n");
+            box.AppendText($"♛ Players (Max Concurrent: {summary["max_players"]})\n\n");
+            box.AppendText($"Player Joins ({joins.Count}):\n");
             foreach (var name in joins)
-                box.AppendText($"- {name}\n");
-
-            box.AppendText($"\n🚪 Player Leaves ({leaves.Count}):\n");
+                box.AppendText($"• {name}\n");
+            box.AppendText($"\nPlayer Leaves ({leaves.Count}):\n");
             foreach (var name in leaves)
-                box.AppendText($"- {name}\n");
+                box.AppendText($"• {name}\n");
+            box.AppendText("----------------------------\n");
 
             summaryTab.Controls.Add(box);
+
+            string exc = summary["exc_block"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(exc))
+            {
+                box.AppendText($"\n🕱 First Exception:\n\n");
+                box.AppendText(exc + "\n");
+            }
+            // -------------------------
+            // Exceptions Tab
+            // -------------------------
+            if (tabControlRightPane.TabPages.ContainsKey("Exceptions"))
+            {
+                var exceptionsTab = tabControlRightPane.TabPages["Exceptions"];
+                exceptionsTab.Controls.Clear();
+
+                RichTextBox exceptionBox = new RichTextBox
+                {
+                    Dock = DockStyle.Fill,
+                    ReadOnly = true,
+                    Font = new Font("Consolas", 10),
+                    BackColor = Color.Black,
+                    ForeColor = Color.White
+                };
+
+                exceptionBox.AppendText($"Total Exceptions: {allExceptions?.Count ?? 0}\n");
+                if (allExceptions != null)
+                {
+                    foreach (var exLine in allExceptions.Take(25))
+                    {
+                        exceptionBox.AppendText("------------------------------\n");
+                        exceptionBox.AppendText(exLine + "\n\n");
+                    }
+                }
+
+                exceptionsTab.Controls.Add(exceptionBox);
+            }
+
+            // -------------------------
+            // Errors Tab
+            // -------------------------
+            if (tabControlRightPane.TabPages.ContainsKey("Errors"))
+            {
+                var errorsTab = tabControlRightPane.TabPages["Errors"];
+                errorsTab.Controls.Clear();
+
+                RichTextBox errorBox = new RichTextBox
+                {
+                    Dock = DockStyle.Fill,
+                    ReadOnly = true,
+                    Font = new Font("Consolas", 10),
+                    BackColor = Color.Black,
+                    ForeColor = Color.White
+                };
+
+                errorBox.AppendText($"Total Errors: {summary["error_count"]}\n");
+                errorBox.AppendText("------------------------------\n");
+
+                var allErrors = summary["all_errors"] as List<string>;
+                if (allErrors != null)
+                {
+                    foreach (var err in allErrors.Take(25))
+                        errorBox.AppendText(err + "\n\n");
+                }
+
+                errorsTab.Controls.Add(errorBox);
+            }
+
+            // -------------------------
+            // Warnings Tab
+            // -------------------------
+            if (tabControlRightPane.TabPages.ContainsKey("Warnings"))
+            {
+                var warningsTab = tabControlRightPane.TabPages["Warnings"];
+                warningsTab.Controls.Clear();
+
+                RichTextBox warnBox = new RichTextBox
+                {
+                    Dock = DockStyle.Fill,
+                    ReadOnly = true,
+                    Font = new Font("Consolas", 10),
+                    BackColor = Color.Black,
+                    ForeColor = Color.White
+                };
+
+                warnBox.AppendText($"Total Warnings: {summary["warning_count"]}\n");
+                var allWarnings = summary["all_warnings"] as List<string>;
+                if (allWarnings != null)
+                {
+                    foreach (var wrn in allWarnings.Take(25))
+                        warnBox.AppendText(wrn + "\n");
+                }
+
+                warningsTab.Controls.Add(warnBox);
+            }
+
+
         }
 
+
+        private void AppendExceptionsToBox(RichTextBox box, List<string> exceptions)
+        {
+            int count = 0;
+            while (exceptionDisplayIndex < exceptions.Count && count < 10)
+            {
+                box.AppendText("------------------------------\n");
+                box.AppendText(exceptions[exceptionDisplayIndex] + "\n\n");
+                exceptionDisplayIndex++;
+                count++;
+            }
+        }
 
         private void SettingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
